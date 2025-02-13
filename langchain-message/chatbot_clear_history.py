@@ -23,41 +23,32 @@ prompt = ChatPromptTemplate.from_messages(
 )
 
 chain = prompt | chat
+
+#消息裁剪，只保留最近两条消息
+def trim_messages(chain_input):
+    stored_messages = temp_chat_history.messages
+    if len(stored_messages) <= 2:
+        return False
+    temp_chat_history.clear()
+    for message in stored_messages[-2:]:
+        temp_chat_history.add_message(message)
+    return True
+
 chain_with_message_history = RunnableWithMessageHistory(
     chain,
     lambda session_id: temp_chat_history,
     input_messages_key="input",
     history_messages_key="chat_history",
 )
-#总结消息
-def summarize_messages(chain_input):
-    stored_messages = temp_chat_history.messages
-    if len(stored_messages) == 0:
-        return False
-    summarizaiton_prompt = ChatPromptTemplate.from_messages(
-        [
-            MessagesPlaceholder(variable_name="chat_history"),
-            (
-                "user",
-                "将上述聊天消息浓缩成一条摘要消息。尽可能包含多个具体细节。",
-            ),
-        ]
-    )
-    summarization_chain = summarizaiton_prompt | chat
-    summary_message = summarization_chain.invoke(
-        {"chat_history":stored_messages})
-    temp_chat_history.clear()
-    temp_chat_history.add_message(summary_message)
-    return True
 
-chain_with_summarization = (
-    RunnablePassthrough.assign(messages_summarized=summarize_messages)
+chain_with_trimming = (
+    RunnablePassthrough.assign(messages_trimmed=trim_messages)
     | chain_with_message_history
 )
 
-response = chain_with_summarization.invoke(
+response = chain_with_trimming.invoke(
     {
-        "input":"名字，下午在干嘛？，心情",
+        "input":"我今天下午在干嘛？",
     },
     config={"configurable":{"session_id":"unused"}}
 )
