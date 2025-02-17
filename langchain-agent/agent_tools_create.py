@@ -32,7 +32,7 @@ retriever_tool = create_retriever_tool(
 )
 
 #大模型调用
-model = ChatOpenAI("gpt-4")
+model = ChatOpenAI(model_name="gpt-4")
 search = TavilySearchResults(max_results=1)
 tools = [search,retriever_tool]
 
@@ -40,11 +40,11 @@ from langchain import hub
 #pulling a pre-defined prompt or template from the LangChain Hub, which is a repository of shared prompts, tools, or chains hosted by LangChain.
 #官方提示词仓库,获取提示词模版
 prompt = hub.pull("hwchase17/openai-functions-agent")
-print(prompt.message)
+print(prompt.messages)
 
 #调用工具是agent驱动的
-from langchain.agents import create_tool_callsing_agent
-agent = create_tool_callsing_agent(model,tools,prompt)
+from langchain.agents import create_tool_calling_agent
+agent = create_tool_calling_agent(model,tools,prompt)
 
 from langchain.agents import AgentExecutor
 agent_executor = AgentExecutor(agent=agent,tools=tools)
